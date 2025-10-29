@@ -1,34 +1,62 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import { products as defaultProducts } from './data/products'
+import ProductList from './components/ProductList'
+import Cart from './components/Cart'
+
+type CartState = Record<string, number>
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [cart, setCart] = useState<CartState>({})
+  const [showCart, setShowCart] = useState(false)
+
+  function addToCart(productId: string) {
+    setCart((prev) => ({ ...prev, [productId]: (prev[productId] || 0) + 1 }))
+  }
+
+  function removeFromCart(productId: string) {
+    setCart((prev) => {
+      const copy = { ...prev }
+      delete copy[productId]
+      return copy
+    })
+  }
+
+  function setQuantity(productId: string, quantity: number) {
+    setCart((prev) => {
+      const copy = { ...prev }
+      if (quantity <= 0) delete copy[productId]
+      else copy[productId] = quantity
+      return copy
+    })
+  }
+
+  const totalItems = Object.values(cart).reduce((s, q) => s + q, 0)
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div id="app-root">
+      <header className="app-header">
+        <h1>00 — Tienda de prueba</h1>
+        <div className="cart-summary">
+          <button onClick={() => setShowCart((s) => !s)}>
+            Cesta ({totalItems})
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <ProductList products={defaultProducts} onAdd={addToCart} />
+      </main>
+
+      <Cart
+        open={showCart}
+        cart={cart}
+        products={defaultProducts}
+        onClose={() => setShowCart(false)}
+        onRemove={removeFromCart}
+        onSetQuantity={setQuantity}
+      />
+    </div>
   )
 }
 
